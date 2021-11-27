@@ -9,7 +9,21 @@
 #define GATHEROSSTATE_ORIGINAL L"gatherosstate.exe"
 #define GATHEROSSTATE_MODIFIED L"gatherosstatemodified.exe"
 
-#define GATHEROSSTATE_ORIGINAL_CHECKSUM (DWORD) 0x60A8D
+#ifdef _AMD64_
+	#define GATHEROSSTATE_ORIGINAL_CHECKSUM (DWORD) 0x58761
+	#define GATHEROSSTATE_ORIGINAL_CHECKSUM_OFFSET 0x140
+	#define GATHEROSSTATE_ORIGINAL_PATCH_OFFSET 0x4FD40
+#elif _ARM64_
+	#define GATHEROSSTATE_ORIGINAL_CHECKSUM (DWORD) 0x62FBB
+	#define GATHEROSSTATE_ORIGINAL_CHECKSUM_OFFSET 0x148
+	#define GATHEROSSTATE_ORIGINAL_PATCH_OFFSET 0x95E0
+#elif _X86_
+	#define GATHEROSSTATE_ORIGINAL_CHECKSUM (DWORD) 0x60A8D
+	#define GATHEROSSTATE_ORIGINAL_CHECKSUM_OFFSET 0x140
+	#define GATHEROSSTATE_ORIGINAL_PATCH_OFFSET 0x68C0
+#else
+	#error lmao
+#endif
 
 #define SL_E_VALUE_NOT_FOUND 0xC004F012
 
@@ -393,7 +407,7 @@ HRESULT WINAPI SLClose(
 }
 
 /*
- * This function patches the 14393 x86 ADK gatherosstate residing in the current working directory.
+ * This function patches the 14393 ADK gatherosstate residing in the current working directory.
  * Keep in mind that it won't touch any other version of gatherosstate.
  */
 void PatchGatherosstate() {
@@ -414,14 +428,14 @@ void PatchGatherosstate() {
 	if(!CheckIfFileExists(GATHEROSSTATE_ORIGINAL))
 		goto failed;;
 
-	// Check the PE signature to verify that we're working with the x86 ADK 14393 gatherosstate.exe
+	// Check the PE signature to verify that we're working with the ADK 14393 gatherosstate.exe
 	MapFileAndCheckSum(
 		GATHEROSSTATE_ORIGINAL,
 		&dwOriginalCheckSum,
 		&dwOriginalCheckSum
 	);
 	if(dwOriginalCheckSum != GATHEROSSTATE_ORIGINAL_CHECKSUM) {
-		MessageBox(NULL, L"You're using an incorrect version of gatherosstate. Please use the 14393 x86 ADK gatherosstate.exe", L"SLC Integrated Patcher", MB_OK);
+		MessageBox(NULL, L"You're using an incorrect version of gatherosstate. Please use the 14393 ADK gatherosstate.exe", L"SLC Integrated Patcher", MB_OK);
 		goto failed;
 	}
 
@@ -452,7 +466,7 @@ void PatchGatherosstate() {
 
 	status = WriteToFileAtOffset(
 		hModifiedFile,
-		0x68C0,
+		GATHEROSSTATE_ORIGINAL_PATCH_OFFSET,
 		lpwszRegistryPfn,
 		(wcslen(lpwszRegistryPfn) + 1) * sizeof(wchar_t)
 	);
@@ -471,7 +485,7 @@ void PatchGatherosstate() {
 
 	status = WriteToFileAtOffset(
 		hModifiedFile,
-		0x140, // Pretty much constant. This is the offset of the Optional Header's Checksum field.
+		GATHEROSSTATE_ORIGINAL_CHECKSUM_OFFSET,
 		&dwModifiedCheckSum,
 		sizeof(DWORD)
 	);
