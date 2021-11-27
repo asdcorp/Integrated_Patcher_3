@@ -1,0 +1,12 @@
+LIBRARY slc.dll
+EXPORTS
+SLClose
+SLGetGenuineInformation
+SLGetLicensingStatusInformation
+SLGetPKeyInformation
+SLGetProductSkuInformation = SLGetPKeyInformation
+SLGetSLIDList
+SLGetServiceInformation
+SLGetWindowsInformationDWORD
+SLOpen
+PatchGatherosstate
